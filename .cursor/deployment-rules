@@ -1,0 +1,40 @@
+# Правила деплоя и разработки
+
+## Структура проекта
+- **Frontend**: React + Vite + TailwindCSS (папка src/)
+- **Backend API**: Express.js (папка api/)
+- **Деплой**: Vercel с автодеплоем из main ветки
+
+## Workflow разработки
+1. **Локальная разработка**: `npm run dev` (порт 5173)
+2. **API разработка**: `cd api && npm run dev` (порт 3001)
+3. **Тестирование**: локально перед коммитом
+4. **Коммиты**: небольшие, атомарные изменения
+5. **Пуш**: в feature-ветки для больших фич, в main для стабильных версий
+
+## Деплой на Vercel
+- **Автодеплой**: при пуше в main ветку
+- **Preview деплой**: при создании PR
+- **Конфигурация**: vercel.json настроен для SPA + API routes
+- **Build команда**: `npm run build` (Vite)
+- **Output**: папка `dist/`
+
+## Зависимости для деплоя
+- Build-зависимости (vite, tailwindcss, etc.) в `dependencies` (не devDependencies)
+- Это необходимо для успешной сборки на Vercel
+
+## Откат изменений
+- **Локально**: `git reset --hard HEAD~1` или `git revert <commit>`
+- **На продакшене**: откат через Vercel Dashboard или `git revert` + push
+- **Экстренный откат**: редеплой предыдущего коммита через Vercel
+
+## API endpoints
+- Локально: http://localhost:3001/api/
+- Продакшн: https://your-domain.vercel.app/api/
+- Настройка в src/utils/apiClient.js
+
+## Рекомендации
+- НЕ пуши в main незавершенные фичи
+- Используй feature-ветки для экспериментов
+- Тестируй билд локально: `npm run build && npm run preview`
+- Проверяй деплой статус в Vercel Dashboard

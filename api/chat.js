@@ -1,3 +1,5 @@
+import geminiService from './services/geminiService.js'
+
 /**
  * Chat endpoint for Vercel Functions
  * @param {Object} req - Request object
@@ -50,20 +52,66 @@ export default async function handler(req, res) {
       messageLength: message.length,
       hasJob: !!context.jobText,
       hasResume: !!context.resumeText,
-      historyLength: conversationHistory.length
+      historyLength: conversationHistory.length,
+      hasApiKey: !!process.env.GOOGLE_GEMINI_API_KEY
     })
 
-    // Временная заглушка для тестирования
-    const mockResponse = {
-      success: true,
-      data: {
-        message: `Привет! Я получил ваше сообщение: "${message}". API работает, но Gemini интеграция временно отключена для отладки.`,
-        timestamp: new Date().toISOString(),
-        mode: mode
+    // Получаем план интервью для первого сообщения
+    let interviewPlan = null
+    if (conversationHistory.length === 0) {
+      const planResult = await geminiService.planInterview(context, {
+        model: settings.model || 'gemini-1.5-flash-8b',
+        temperature: settings.temperature || 0.7
+      })
+      
+      if (planResult.success) {
+        interviewPlan = planResult.data
+      } else {
+        console.error('Failed to plan interview:', planResult.error)
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to initialize interview',
+          details: planResult.error
+        })
       }
     }
 
-    res.status(200).json(mockResponse)
+    // Отправляем сообщение в чат
+    const chatResult = await geminiService.sendChatMessage(
+      message,
+      conversationHistory,
+      interviewPlan,
+      {
+        model: settings.model || 'gemini-1.5-flash-8b',
+        temperature: settings.temperature || 0.8,
+        maxTokens: settings.maxTokens || 1000
+      }
+    )
+
+    if (!chatResult.success) {
+      console.error('Chat failed:', chatResult.error)
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to get AI response',
+        details: chatResult.error,
+        errorCode: chatResult.errorCode
+      })
+    }
+
+    // Возвращаем успешный результат
+    res.status(200).json({
+      success: true,
+      data: {
+        message: chatResult.data.message,
+        timestamp: chatResult.data.timestamp,
+        mode: mode,
+        model: chatResult.data.model,
+        usage: chatResult.data.usage,
+        isCompletionSuggested: chatResult.data.isCompletionSuggested || false,
+        interviewPlan: interviewPlan // Включаем план только для первого сообщения
+      }
+    })
+
   } catch (error) {
     console.error('Chat API error:', error)
     res.status(500).json({
