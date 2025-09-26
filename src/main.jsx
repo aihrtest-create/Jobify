@@ -7,7 +7,7 @@ import './utils/debugUtils.js' // Подключаем debug утилиты
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename="/">
       <App />
     </BrowserRouter>
   </React.StrictMode>,
