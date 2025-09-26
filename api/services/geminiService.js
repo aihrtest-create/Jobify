@@ -26,7 +26,7 @@ const getInterviewPrompt = (context) => {
 • После 5-7 вопросов предлагай завершить
 • Используй фразу: "Отлично! У меня есть достаточно информации. Есть ли у вас вопросы ко мне? [INTERVIEW_COMPLETE]"
 
-СТИЛЬ: Живой, дружелюбный, профессиональный. БЕЗ префиксов "Интервьюер:" или "Аня:"!`
+КРИТИЧЕСКИ ВАЖНО: Отвечай ТОЛЬКО текстом без префиксов! НИКОГДА не используй "Интервьюер:", "Аня:", "AI:" или любые другие префиксы. Начинай ответ сразу с содержания!`
 
   return basePrompt
 }
@@ -120,10 +120,10 @@ class GeminiService {
         // Для продолжения разговора используем краткий контекст
         const conversationContext = conversationHistory
           .slice(-10)
-          .map(msg => `${msg.sender === 'user' ? 'Кандидат' : 'Интервьюер'}: ${msg.text}`)
+          .map(msg => `${msg.sender === 'user' ? 'Кандидат' : ''}: ${msg.text}`)
           .join('\n')
 
-        systemPrompt = `Ты ведешь интервью. Продолжай в том же стиле.
+        systemPrompt = `Ты ведешь интервью. Продолжай в том же стиле. БЕЗ префиксов "Интервьюер:" или "Аня:"!
 
 КОНТЕКСТ РАЗГОВОРА:
 ${conversationContext}
@@ -142,7 +142,11 @@ ${conversationContext}
       })
 
       // Проверяем, предлагает ли ИИ завершение (после 5-8 вопросов)
-      const responseText = result.data?.message || ''
+      let responseText = result.data?.message || ''
+      
+      // Удаляем префиксы если они все-таки появились
+      responseText = responseText.replace(/^(Интервьюер|Аня|AI|Assistant):\s*/i, '')
+      
       const isCompletionSuggested = responseText.toLowerCase().includes('завершить') || 
                                    responseText.toLowerCase().includes('закончить') ||
                                    responseText.toLowerCase().includes('достаточно') ||
@@ -152,6 +156,7 @@ ${conversationContext}
         ...result,
         data: {
           ...result.data,
+          message: responseText,
           isCompletionSuggested
         }
       }
