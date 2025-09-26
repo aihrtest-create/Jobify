@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import axios from 'axios'
 
 /**
  * Получить промпт интервьюера из настроек с подстановкой контекста
@@ -32,38 +32,31 @@ const getInterviewPrompt = (context) => {
 }
 
 /**
- * Сервис для работы с Google Gemini API
- * Обеспечивает интеграцию с различными моделями Gemini
+ * Сервис для работы с OpenRouter API
+ * Обеспечивает интеграцию с различными LLM моделями через OpenRouter
  */
-class GeminiService {
+class OpenRouterService {
   constructor() {
-    this.apiKey = process.env.GOOGLE_GEMINI_API_KEY || ''
-    this.genAI = null
+    this.baseURL = 'https://openrouter.ai/api/v1'
+    this.apiKey = process.env.OPENROUTER_API_KEY || ''
+    
+    this.client = axios.create({
+      baseURL: this.baseURL,
+      timeout: 60000, // 60 секунд для LLM запросов
+      headers: {
+        'Content-Type': 'application/json',
+        'HTTP-Referer': process.env.FRONTEND_URL || 'http://localhost:5173',
+        'X-Title': 'AI Coach Interview Platform'
+      }
+    })
   }
 
   /**
-   * Установить API ключ и инициализировать клиент
-   * @param {string} apiKey - API ключ Gemini
+   * Установить API ключ
+   * @param {string} apiKey - API ключ OpenRouter
    */
   setApiKey(apiKey) {
     this.apiKey = apiKey
-    if (apiKey) {
-      this.genAI = new GoogleGenerativeAI(apiKey)
-    } else {
-      this.genAI = null
-    }
-  }
-
-  /**
-   * Получить модель Gemini
-   * @param {string} modelName - Название модели
-   * @returns {Object} Экземпляр модели
-   */
-  getModel(modelName = 'gemini-1.5-flash-8b') {
-    if (!this.genAI) {
-      throw new Error('Gemini API не инициализирован. Установите API ключ.')
-    }
-    return this.genAI.getGenerativeModel({ model: modelName })
   }
 
   /**
@@ -75,7 +68,7 @@ class GeminiService {
   async planInterview(context = {}, options = {}) {
     try {
       let {
-        model = 'gemini-1.5-flash-8b',
+        model = 'anthropic/claude-3-haiku',
         temperature = 0.7,
         maxTokens = 1500
       } = options
@@ -122,7 +115,7 @@ class GeminiService {
   async sendChatMessage(message, conversationHistory = [], interviewPlan = null, options = {}) {
     try {
       let {
-        model = 'gemini-1.5-flash-8b',
+        model = 'anthropic/claude-3-haiku',
         temperature = 0.8,
         maxTokens = 1000
       } = options
@@ -183,7 +176,7 @@ ${conversationContext}
   }
 
   /**
-   * Отправить сообщение в чат с Gemini
+   * Отправить сообщение в чат с OpenRouter
    * @param {string} message - Сообщение пользователя
    * @param {Object} options - Опции запроса
    * @param {string} options.model - Модель для использования
@@ -191,150 +184,112 @@ ${conversationContext}
    * @param {number} options.maxTokens - Максимальное количество токенов
    * @param {string} options.systemPrompt - Системный промпт
    * @param {Array} options.conversationHistory - История диалога
-   * @returns {Promise<Object>} Ответ от Gemini
+   * @returns {Promise<Object>} Ответ от OpenRouter
    */
   async sendMessage(message, options = {}) {
-      let {
-        model = 'gemini-1.5-flash-8b',
-        temperature = 0.7,
-        maxTokens = 1000,
-        systemPrompt = '',
-        conversationHistory = []
-      } = options
-
-    // Первая попытка с выбранной моделью
-    try {
-      return await this._attemptSendMessage(message, {
-        model,
-        temperature,
-        maxTokens,
-        systemPrompt,
-        conversationHistory
-      })
-    } catch (error) {
-      // Если превышена квота, пробуем другую модель
-      if ((error.status === 429 || error.message?.includes('quota'))) {
-        console.log(`Quota exceeded for ${model}, trying alternative model...`)
-        try {
-          // Пробуем другую модель в зависимости от текущей
-          const alternativeModel = model.includes('flash-8b') ? 'gemini-1.5-flash' : 'gemini-1.5-flash-8b'
-          return await this._attemptSendMessage(message, {
-            model: alternativeModel,
-            temperature,
-            maxTokens,
-            systemPrompt,
-            conversationHistory
-          })
-        } catch (alternativeError) {
-          // Если и альтернативная модель не работает, возвращаем оригинальную ошибку
-          return this._handleError(error)
-        }
-      }
-      return this._handleError(error)
-    }
-  }
-
-  /**
-   * Внутренний метод для отправки сообщения
-   * @private
-   */
-  async _attemptSendMessage(message, options) {
-    const {
-      model,
-      temperature,
-      maxTokens,
-      systemPrompt,
-      conversationHistory
+    let {
+      model = 'anthropic/claude-3-haiku',
+      temperature = 0.7,
+      maxTokens = 1000,
+      systemPrompt = '',
+      conversationHistory = []
     } = options
 
     try {
-      const genModel = this.getModel(model)
-
-      // Настраиваем параметры генерации
-      const generationConfig = {
-        temperature: Math.max(0, Math.min(2, temperature)),
-        maxOutputTokens: Math.max(1, Math.min(8192, maxTokens)),
-        topP: 0.95,
-        topK: 40,
-      }
-
-      // Формируем полный контекст
-      let fullPrompt = ''
+      // Формируем сообщения для OpenRouter API
+      const messages = []
       
+      // Добавляем системный промпт
       if (systemPrompt) {
-        fullPrompt += `${systemPrompt}\n\n`
+        messages.push({
+          role: 'system',
+          content: systemPrompt
+        })
       }
 
       // Добавляем историю диалога
       if (conversationHistory.length > 0) {
-        fullPrompt += 'История диалога:\n'
         conversationHistory.forEach(msg => {
-          const role = msg.sender === 'user' ? 'Кандидат' : 'Интервьюер'
-          fullPrompt += `${role}: ${msg.text}\n`
+          messages.push({
+            role: msg.sender === 'user' ? 'user' : 'assistant',
+            content: msg.text
+          })
         })
-        fullPrompt += '\n'
       }
 
-      fullPrompt += `Кандидат: ${message}\nИнтервьюер:`
-
-      // Отправляем запрос
-      const result = await genModel.generateContent({
-        contents: [{
-          role: 'user',
-          parts: [{ text: fullPrompt }]
-        }],
-        generationConfig
+      // Добавляем текущее сообщение
+      messages.push({
+        role: 'user',
+        content: message
       })
 
-      const response = await result.response
-      const text = response.text()
+      // Настройки запроса
+      const requestBody = {
+        model: model,
+        messages: messages,
+        temperature: Math.max(0, Math.min(2, temperature)),
+        max_tokens: Math.max(1, Math.min(8192, maxTokens)),
+        top_p: 0.95,
+        frequency_penalty: 0,
+        presence_penalty: 0
+      }
 
-      if (!text) {
-        throw new Error('Пустой ответ от Gemini API')
+      // Отправляем запрос
+      const response = await this.client.post('/chat/completions', requestBody, {
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+        }
+      })
+
+      const data = response.data
+      const content = data.choices?.[0]?.message?.content
+
+      if (!content) {
+        throw new Error('Пустой ответ от OpenRouter API')
       }
 
       return {
         success: true,
         data: {
-          message: text.trim(),
+          message: content.trim(),
           model: model,
           timestamp: new Date().toISOString(),
           usage: {
-            promptTokens: response.usageMetadata?.promptTokenCount || 0,
-            completionTokens: response.usageMetadata?.candidatesTokenCount || 0,
-            totalTokens: response.usageMetadata?.totalTokenCount || 0
+            promptTokens: data.usage?.prompt_tokens || 0,
+            completionTokens: data.usage?.completion_tokens || 0,
+            totalTokens: data.usage?.total_tokens || 0
           }
         }
       }
 
     } catch (error) {
-      console.error('Gemini API Error:', error)
-      throw error // Пробрасываем ошибку для обработки в основном методе
+      console.error('OpenRouter API Error:', error)
+      return this._handleError(error)
     }
   }
 
   /**
-   * Обработка ошибок Gemini API
+   * Обработка ошибок OpenRouter API
    * @private
    */
   _handleError(error) {
-    console.error('Gemini API Error:', error)
+    console.error('OpenRouter API Error:', error)
       
     // Определяем тип ошибки
-    let errorMessage = 'Ошибка при обращении к Gemini API'
-    let errorCode = 'GEMINI_ERROR'
+    let errorMessage = 'Ошибка при обращении к OpenRouter API'
+    let errorCode = 'OPENROUTER_ERROR'
 
-    if (error.message?.includes('API key')) {
-      errorMessage = 'Неверный API ключ Gemini'
+    if (error.response?.status === 401) {
+      errorMessage = 'Неверный API ключ OpenRouter'
       errorCode = 'INVALID_API_KEY'
-    } else if (error.message?.includes('quota') || error.status === 429) {
-      errorMessage = 'Превышена квота Gemini API. Попробуйте позже или смените модель на Flash'
+    } else if (error.response?.status === 429) {
+      errorMessage = 'Превышена квота OpenRouter API. Попробуйте позже'
       errorCode = 'QUOTA_EXCEEDED'
-    } else if (error.message?.includes('safety')) {
-      errorMessage = 'Запрос заблокирован системой безопасности Gemini'
-      errorCode = 'SAFETY_BLOCKED'
-    } else if (error.message?.includes('timeout')) {
-      errorMessage = 'Таймаут запроса к Gemini API'
+    } else if (error.response?.status === 400) {
+      errorMessage = 'Некорректный запрос к OpenRouter API'
+      errorCode = 'BAD_REQUEST'
+    } else if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+      errorMessage = 'Таймаут запроса к OpenRouter API'
       errorCode = 'TIMEOUT'
     }
 
@@ -342,10 +297,9 @@ ${conversationContext}
       success: false,
       error: errorMessage,
       errorCode: errorCode,
-      details: error.message
+      details: error.response?.data?.error?.message || error.message
     }
   }
-
 
   /**
    * Генерация обратной связи по результатам интервью
@@ -357,7 +311,7 @@ ${conversationContext}
   async generateFeedback(messages, context = {}, options = {}) {
     try {
       let {
-        model = 'gemini-1.5-flash-8b',
+        model = 'anthropic/claude-3-haiku',
         temperature = 0.3,
         maxTokens = 2000
       } = options
@@ -409,13 +363,13 @@ ${conversationContext}
   }
 
   /**
-   * Проверка подключения к Gemini API
+   * Проверка подключения к OpenRouter API
    * @returns {Promise<Object>} Результат проверки
    */
   async testConnection() {
     try {
       const result = await this.sendMessage('Привет! Это тест подключения.', {
-        model: 'gemini-1.5-flash-8b',
+        model: 'anthropic/claude-3-haiku',
         temperature: 0.1,
         maxTokens: 50,
         systemPrompt: 'Ответь коротко: "Подключение успешно!"'
@@ -428,4 +382,4 @@ ${conversationContext}
   }
 }
 
-export default new GeminiService()
+export default new OpenRouterService()

@@ -2,6 +2,7 @@ import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import geminiService from './services/geminiService.js'
+import openrouterService from './services/openrouterService.js'
 
 // Загружаем переменные окружения
 dotenv.config()
@@ -28,6 +29,32 @@ const requestLogger = (req, res, next) => {
 }
 
 app.use(requestLogger)
+
+/**
+ * Получить сервис LLM на основе настроек
+ * @param {Object} settings - Настройки LLM
+ * @returns {Object} Соответствующий сервис LLM
+ */
+const getLLMService = (settings = {}) => {
+  const { provider = 'gemini', geminiApiKey, openrouterApiKey } = settings
+  
+  if (provider === 'openrouter') {
+    // Устанавливаем API ключ для OpenRouter
+    if (openrouterApiKey) {
+      openrouterService.setApiKey(openrouterApiKey)
+    }
+    return openrouterService
+  } else {
+    // Устанавливаем API ключ для Gemini
+    if (geminiApiKey) {
+      geminiService.setApiKey(geminiApiKey)
+    } else if (process.env.GOOGLE_GEMINI_API_KEY) {
+      // Используем ключ из переменных окружения как fallback
+      geminiService.setApiKey(process.env.GOOGLE_GEMINI_API_KEY)
+    }
+    return geminiService
+  }
+}
 
 // Базовые маршруты
 app.get('/', (req, res) => {
@@ -140,10 +167,12 @@ app.post('/api/plan-interview', async (req, res) => {
     console.log('Interview planning request:', {
       hasJob: !!context.jobText,
       hasResume: !!context.resumeText,
-      jobLength: context.jobText?.length || 0
+      jobLength: context.jobText?.length || 0,
+      provider: settings.provider || 'gemini'
     })
     
-    const result = await geminiService.planInterview(context, settings)
+    const llmService = getLLMService(settings)
+    const result = await llmService.planInterview(context, settings)
     
     console.log('Interview plan generated:', {
       success: result.success,
@@ -199,10 +228,14 @@ app.post('/api/chat', async (req, res) => {
       hasJob: !!context.jobText,
       hasResume: !!context.resumeText,
       hasPlan: !!interviewPlan,
-      historyLength: conversationHistory.length
+      historyLength: conversationHistory.length,
+      provider: settings.provider || 'gemini'
     })
 
-    // Отправляем запрос к Gemini с retry логикой
+    // Получаем нужный LLM сервис
+    const llmService = getLLMService(settings)
+
+    // Отправляем запрос к LLM с retry логикой
     let result
     let attempts = 0
     const maxAttempts = 3
@@ -211,7 +244,7 @@ app.post('/api/chat', async (req, res) => {
       try {
         attempts++
         // Используем универсальную логику чата
-        result = await geminiService.sendChatMessage(message, conversationHistory, interviewPlan, {
+        result = await llmService.sendChatMessage(message, conversationHistory, interviewPlan, {
           model,
           temperature,
           maxTokens
@@ -295,8 +328,11 @@ app.post('/api/feedback', async (req, res) => {
       maxTokens = 2000
     } = settings
 
-    // Генерируем обратную связь через Gemini
-    const result = await geminiService.generateFeedback(messages, context, {
+    // Получаем нужный LLM сервис
+    const llmService = getLLMService(settings)
+    
+    // Генерируем обратную связь через выбранный LLM
+    const result = await llmService.generateFeedback(messages, context, {
       model,
       temperature,
       maxTokens
@@ -333,12 +369,8 @@ app.post('/api/cover-letter', async (req, res) => {
 
     const { provider = 'gemini', model = 'gemini-1.5-flash-8b', temperature = 0.7, maxTokens = 1500 } = settings
 
-    if (provider !== 'gemini') {
-      return res.status(400).json({
-        success: false,
-        error: 'Поддерживается только Gemini API'
-      })
-    }
+    // Получаем нужный LLM сервис
+    const llmService = getLLMService(settings)
 
     // Упрощенный промпт для сопроводительного письма
     let systemPrompt = `Напиши профессиональное сопроводительное письмо для данной вакансии.
@@ -354,7 +386,7 @@ app.post('/api/cover-letter', async (req, res) => {
 
 Тон: профессиональный, но живой. Подчеркни соответствие требованиям вакансии.`
     
-    const result = await geminiService.sendMessage('Напиши сопроводительное письмо', {
+    const result = await llmService.sendMessage('Напиши сопроводительное письмо', {
       model,
       temperature,
       maxTokens,
@@ -374,7 +406,7 @@ app.post('/api/cover-letter', async (req, res) => {
 })
 
 /**
- * Тестирование подключения к Gemini API
+ * Тестирование подключения к Gemini API (для обратной совместимости)
  * @route GET /api/test-gemini
  */
 app.get('/api/test-gemini', async (req, res) => {
@@ -383,6 +415,31 @@ app.get('/api/test-gemini', async (req, res) => {
     res.json(result)
   } catch (error) {
     console.error('Gemini test error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      details: error.message
+    })
+  }
+})
+
+/**
+ * Тестирование подключения к выбранному LLM провайдеру
+ * @route POST /api/test-connection
+ */
+app.post('/api/test-connection', async (req, res) => {
+  try {
+    const { settings = {} } = req.body
+    const { provider = 'gemini' } = settings
+    
+    console.log('Testing connection for provider:', provider)
+    
+    const llmService = getLLMService(settings)
+    const result = await llmService.testConnection()
+    
+    res.json(result)
+  } catch (error) {
+    console.error('Connection test error:', error)
     res.status(500).json({
       success: false,
       error: 'Internal server error',
