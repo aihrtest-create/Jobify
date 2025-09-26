@@ -528,7 +528,7 @@ const InterviewPage = () => {
                     ? "Анализируем данные..."
                     : "Инициализация..."
                 }
-                className="w-full bg-transparent text-slate-700 placeholder-slate-500 focus:outline-none text-sm sm:text-base"
+                className="w-full bg-transparent text-slate-700 placeholder-slate-500 focus:outline-none text-base"
                 disabled={state.isLoading || state.isRecording || state.phase !== 'interviewing'}
               />
             </div>

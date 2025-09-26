@@ -132,7 +132,7 @@ const HomePage = () => {
                   value={jobDescription}
                   onChange={(e) => setJobDescription(e.target.value)}
                   placeholder="Вставьте описание вакансии здесь..."
-                  className="w-full h-full resize-none border-none outline-none text-sm text-primary-900 placeholder-gray-400"
+                  className="w-full h-full resize-none border-none outline-none text-base text-primary-900 placeholder-gray-400"
                   rows={3}
                 />
               </div>
@@ -144,7 +144,7 @@ const HomePage = () => {
                   value={jobUrl}
                   onChange={(e) => setJobUrl(e.target.value)}
                   placeholder="Ссылка на вакансию (опционально)"
-                  className="input-field text-sm placeholder-gray-400 sm:pr-24"
+                  className="input-field text-base placeholder-gray-400 sm:pr-24"
                 />
                 <button 
                   type="submit"
