@@ -7,7 +7,9 @@ import { getLLMSettings, getGreeting } from './settings'
  */
 class ApiClient {
   constructor() {
-    this.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+    // Для Vercel используем относительные пути, для локальной разработки - полный URL
+    this.baseURL = import.meta.env.VITE_API_URL || 
+      (import.meta.env.DEV ? 'http://localhost:3001' : '')
     this.client = axios.create({
       baseURL: this.baseURL,
       timeout: 30000, // 30 секунд для LLM запросов

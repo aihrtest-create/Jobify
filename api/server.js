@@ -7,11 +7,10 @@ import geminiService from './services/geminiService.js'
 dotenv.config()
 
 const app = express()
-const PORT = process.env.PORT || 3001
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3002',
+  origin: process.env.FRONTEND_URL || '*',
   credentials: true
 }))
 app.use(express.json())
@@ -409,7 +408,14 @@ app.use((error, req, res, next) => {
   })
 })
 
-app.listen(PORT, () => {
-  console.log(`🚀 Jobify.ai API Server running on port ${PORT}`)
-  console.log(`📍 Health check: http://localhost:${PORT}/api/health`)
-})
+// Экспортируем для Vercel Functions
+export default app
+
+// Запуск сервера только в локальной среде
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 3001
+  app.listen(PORT, () => {
+    console.log(`🚀 Jobify.ai API Server running on port ${PORT}`)
+    console.log(`📍 Health check: http://localhost:${PORT}/api/health`)
+  })
+}
