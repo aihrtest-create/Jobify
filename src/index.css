@@ -1,0 +1,140 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  
+  body {
+    @apply bg-white text-primary-900;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary-900 hover:bg-primary-800 text-white font-medium py-2.5 px-6 rounded-full transition-colors duration-200;
+  }
+  
+  .btn-secondary {
+    @apply bg-gray-100 hover:bg-gray-200 text-primary-900 font-medium py-2.5 px-6 rounded-full transition-colors duration-200;
+  }
+  
+  .btn-accent {
+    @apply bg-accent-dark hover:bg-primary-800 text-white font-medium py-2.5 px-6 rounded-full transition-colors duration-200;
+  }
+  
+  .input-field {
+    @apply w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary-900 focus:border-transparent bg-white;
+  }
+  
+  .card {
+    @apply bg-white rounded-2xl shadow-sm border border-gray-200 p-6;
+  }
+  
+  .card-elevated {
+    @apply bg-white rounded-2xl border border-gray-200 p-6;
+    box-shadow: 0px 8px 30px 0px rgba(0, 0, 0, 0.06);
+  }
+  
+  .badge {
+    @apply bg-accent-light text-primary-900 font-semibold text-xs px-3 py-1 rounded-full;
+  }
+  
+  .header-glass {
+    @apply bg-white/60 backdrop-blur-md border-b border-black/10;
+  }
+  
+  .text-hero {
+    @apply text-6xl font-extrabold leading-none tracking-tight text-center;
+  }
+  
+  .text-subtitle {
+    @apply text-base text-primary-500 text-center;
+  }
+}
+
+@layer utilities {
+  /* Анимации для чата */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes slideInRight {
+    from {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  @keyframes slideInLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+  
+  .animate-fadeIn {
+    animation: fadeIn 0.3s ease-out forwards;
+  }
+  
+  .animate-slideInRight {
+    animation: slideInRight 0.3s ease-out forwards;
+  }
+  
+  .animate-slideInLeft {
+    animation: slideInLeft 0.3s ease-out forwards;
+  }
+  
+  .animate-pulse-slow {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  /* Кастомный скроллбар для чата */
+  .chat-scroll::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  .chat-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .chat-scroll::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 2px;
+  }
+  
+  .chat-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+  }
+  
+  /* Стили для textarea с автоизменением размера */
+  .textarea-auto-resize {
+    field-sizing: content;
+  }
+}
