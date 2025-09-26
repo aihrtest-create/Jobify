@@ -216,10 +216,31 @@ const SettingsPage = () => {
                     </>
                   ) : (
                     <>
-                      <option value="anthropic/claude-3-haiku">Claude 3 Haiku</option>
-                      <option value="anthropic/claude-3-sonnet">Claude 3 Sonnet</option>
-                      <option value="openai/gpt-4">GPT-4</option>
-                      <option value="openai/gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                      {/* Claude модели - отличные для собеседований */}
+                      <option value="anthropic/claude-3-haiku">Claude 3 Haiku (быстрая, экономичная)</option>
+                      <option value="anthropic/claude-3-sonnet">Claude 3 Sonnet (балансированная)</option>
+                      <option value="anthropic/claude-3-opus">Claude 3 Opus (мощная, для сложных интервью)</option>
+                      
+                      {/* GPT модели */}
+                      <option value="openai/gpt-4">GPT-4 (премиум качество)</option>
+                      <option value="openai/gpt-4-turbo">GPT-4 Turbo (быстрая GPT-4)</option>
+                      <option value="openai/gpt-3.5-turbo">GPT-3.5 Turbo (быстрая, экономичная)</option>
+                      
+                      {/* Google модели */}
+                      <option value="google/gemini-pro">Gemini Pro (через OpenRouter)</option>
+                      <option value="google/gemini-pro-vision">Gemini Pro Vision</option>
+                      
+                      {/* Meta модели */}
+                      <option value="meta-llama/llama-3-8b-instruct">Llama 3 8B (быстрая, бесплатная)</option>
+                      <option value="meta-llama/llama-3-70b-instruct">Llama 3 70B (мощная)</option>
+                      
+                      {/* Mistral модели */}
+                      <option value="mistralai/mistral-7b-instruct">Mistral 7B (быстрая)</option>
+                      <option value="mistralai/mixtral-8x7b-instruct">Mixtral 8x7B (экспертная)</option>
+                      
+                      {/* Специализированные модели */}
+                      <option value="cohere/command-r-plus">Cohere Command R+ (для диалогов)</option>
+                      <option value="perplexity/llama-3.1-sonar-small-128k-online">Perplexity Sonar (с интернетом)</option>
                     </>
                   )}
                 </select>
@@ -348,6 +369,23 @@ const SettingsPage = () => {
                   <p className="text-sm text-yellow-800">
                     <strong>💡 Совет:</strong> Gemini 1.5 Flash 8B имеет самые высокие лимиты бесплатного уровня. 
                     При превышении квоты автоматически переключается на резервную модель.
+                  </p>
+                </div>
+              )}
+
+              {settings.llm.provider === 'openrouter' && (
+                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                  <p className="text-sm text-blue-800">
+                    <strong>🎯 Рекомендации для собеседований:</strong>
+                  </p>
+                  <ul className="text-xs text-blue-700 mt-2 space-y-1">
+                    <li>• <strong>Claude 3 Haiku</strong> - быстрая и экономичная для базовых интервью</li>
+                    <li>• <strong>Claude 3 Sonnet</strong> - лучший баланс качества и скорости</li>
+                    <li>• <strong>GPT-4</strong> - премиум качество для сложных технических интервью</li>
+                    <li>• <strong>Llama 3 8B</strong> - бесплатная альтернатива</li>
+                  </ul>
+                  <p className="text-xs text-blue-600 mt-2">
+                    💰 Стоимость варьируется от $0.25 до $30 за 1M токенов
                   </p>
                 </div>
               )}
