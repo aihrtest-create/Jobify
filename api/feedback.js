@@ -1,4 +1,4 @@
-import geminiService from './services/geminiService.js'
+import { getLLMService } from './utils/llmService.js'
 
 /**
  * Feedback generation endpoint for Vercel Functions
@@ -45,8 +45,11 @@ export default async function handler(req, res) {
       maxTokens = 2000
     } = settings
 
-    // Генерируем обратную связь через Gemini
-    const result = await geminiService.generateFeedback(messages, context, {
+    // Получаем нужный LLM сервис
+    const llmService = getLLMService(settings)
+    
+    // Генерируем обратную связь через выбранный LLM
+    const result = await llmService.generateFeedback(messages, context, {
       model,
       temperature,
       maxTokens

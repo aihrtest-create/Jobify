@@ -1,7 +1,7 @@
 import { getLLMService } from './utils/llmService.js'
 
 /**
- * Interview planning endpoint for Vercel Functions
+ * Connection test endpoint for Vercel Functions
  * @param {Object} req - Request object
  * @param {Object} res - Response object
  */
@@ -25,30 +25,20 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { context = {}, settings = {} } = req.body
+    const { settings = {} } = req.body
+    const { provider = 'gemini' } = settings
     
-    console.log('Interview planning request:', {
-      hasJob: !!context.jobText,
-      hasResume: !!context.resumeText,
-      jobLength: context.jobText?.length || 0
-    })
+    console.log('Testing connection for provider:', provider)
     
-    // Получаем нужный LLM сервис
     const llmService = getLLMService(settings)
+    const result = await llmService.testConnection()
     
-    const result = await llmService.planInterview(context, settings)
-    
-    console.log('Interview plan generated:', {
-      success: result.success,
-      hasQuestions: !!result.data?.questions
-    })
-    
-    res.status(200).json(result)
+    res.json(result)
   } catch (error) {
-    console.error('Interview planning error:', error)
+    console.error('Connection test error:', error)
     res.status(500).json({
       success: false,
-      error: 'Ошибка при планировании интервью',
+      error: 'Internal server error',
       details: error.message
     })
   }

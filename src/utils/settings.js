@@ -12,7 +12,10 @@ export const DEFAULT_SETTINGS = {
     provider: 'gemini', // gemini, openrouter
     model: 'gemini-1.5-flash-8b', // Используем Flash 8B модель - быстрая и с высокими лимитами
     temperature: 0.7,
-    maxTokens: 1000
+    maxTokens: 1000,
+    // API ключи
+    geminiApiKey: '',
+    openrouterApiKey: ''
   },
   
   // Системные промпты

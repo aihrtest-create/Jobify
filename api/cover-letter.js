@@ -1,4 +1,4 @@
-import geminiService from './services/geminiService.js'
+import { getLLMService } from './utils/llmService.js'
 
 /**
  * Cover letter generation endpoint for Vercel Functions
@@ -57,7 +57,10 @@ export default async function handler(req, res) {
 
 Тон: профессиональный, но живой. Подчеркни соответствие требованиям вакансии.`
     
-    const result = await geminiService.sendMessage('Напиши сопроводительное письмо', {
+    // Получаем нужный LLM сервис
+    const llmService = getLLMService(settings)
+    
+    const result = await llmService.sendMessage('Напиши сопроводительное письмо', {
       model,
       temperature,
       maxTokens,

@@ -255,7 +255,7 @@ class ApiClient {
   }
 
   /**
-   * Тестирование подключения к Gemini API
+   * Тестирование подключения к Gemini API (для обратной совместимости)
    * @returns {Promise<Object>} Результат тестирования
    */
   async testGeminiConnection() {
@@ -268,6 +268,33 @@ class ApiClient {
       return {
         success: false,
         error: 'Ошибка тестирования Gemini API',
+        errorCode: 'TEST_ERROR'
+      }
+    }
+  }
+
+  /**
+   * Тестирование подключения к выбранному LLM провайдеру
+   * @param {string} provider - Провайдер LLM (gemini, openrouter)
+   * @returns {Promise<Object>} Результат тестирования
+   */
+  async testConnection(provider = 'gemini') {
+    try {
+      const llmSettings = getLLMSettings()
+      
+      const response = await this.client.post('/api/test-connection', {
+        settings: {
+          ...llmSettings,
+          provider
+        }
+      })
+      return response.data
+    } catch (error) {
+      console.error('Connection test error:', error)
+      
+      return {
+        success: false,
+        error: 'Ошибка тестирования подключения к LLM API',
         errorCode: 'TEST_ERROR'
       }
     }

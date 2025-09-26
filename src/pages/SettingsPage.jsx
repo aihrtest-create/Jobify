@@ -109,17 +109,18 @@ const SettingsPage = () => {
   }
 
   /**
-   * Тестирование подключения к Gemini API
+   * Тестирование подключения к выбранному LLM провайдеру
    */
   const handleTestConnection = async () => {
     setIsTesting(true)
     setTestStatus('')
     
     try {
-      const result = await apiClient.testGeminiConnection()
+      const result = await apiClient.testConnection(settings.llm.provider)
       
       if (result.success) {
-        setTestStatus('✅ Подключение к Gemini API успешно!')
+        const providerName = settings.llm.provider === 'gemini' ? 'Gemini' : 'OpenRouter'
+        setTestStatus(`✅ Подключение к ${providerName} API успешно!`)
       } else {
         setTestStatus(`❌ ${result.error || 'Ошибка подключения'}`)
       }
@@ -261,6 +262,50 @@ const SettingsPage = () => {
               </div>
             </div>
 
+            {/* API ключи */}
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <h4 className="text-lg font-medium mb-4">API ключи</h4>
+              <div className="space-y-4">
+                {/* Gemini API Key */}
+                {settings.llm.provider === 'gemini' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Google Gemini API ключ
+                    </label>
+                    <input
+                      type="password"
+                      value={settings.llm.geminiApiKey || ''}
+                      onChange={(e) => handleLLMChange('geminiApiKey', e.target.value)}
+                      placeholder="Введите ваш API ключ Gemini"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Получить можно на <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Google AI Studio</a>
+                    </p>
+                  </div>
+                )}
+
+                {/* OpenRouter API Key */}
+                {settings.llm.provider === 'openrouter' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      OpenRouter API ключ
+                    </label>
+                    <input
+                      type="password"
+                      value={settings.llm.openrouterApiKey || ''}
+                      onChange={(e) => handleLLMChange('openrouterApiKey', e.target.value)}
+                      placeholder="Введите ваш API ключ OpenRouter"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Получить можно на <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">OpenRouter Dashboard</a>
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* Тестирование подключения */}
             <div className="mt-6 pt-6 border-t border-gray-200">
               <h4 className="text-lg font-medium mb-4">Тестирование подключения</h4>
@@ -274,7 +319,7 @@ const SettingsPage = () => {
                       : 'bg-blue-600 text-white hover:bg-blue-700'
                   }`}
                 >
-                  {isTesting ? '🔄 Тестирование...' : '🧪 Тестировать Gemini API'}
+                  {isTesting ? '🔄 Тестирование...' : `🧪 Тестировать ${settings.llm.provider === 'gemini' ? 'Gemini' : 'OpenRouter'} API`}
                 </button>
                 
                 {settings.llm.provider === 'gemini' && settings.llm.model !== 'gemini-1.5-flash' && (

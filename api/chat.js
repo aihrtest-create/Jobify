@@ -1,4 +1,4 @@
-import geminiService from './services/geminiService.js'
+import { getLLMService } from './utils/llmService.js'
 
 /**
  * Chat endpoint for Vercel Functions
@@ -56,11 +56,14 @@ export default async function handler(req, res) {
       hasApiKey: !!process.env.GOOGLE_GEMINI_API_KEY
     })
 
+    // Получаем нужный LLM сервис
+    const llmService = getLLMService(settings)
+
     // Получаем план интервью для первого сообщения
     let interviewPlan = null
     if (conversationHistory.length === 0) {
-      const planResult = await geminiService.planInterview(context, {
-        model: settings.model || 'gemini-1.5-flash-8b',
+      const planResult = await llmService.planInterview(context, {
+        model: settings.model || (settings.provider === 'openrouter' ? 'anthropic/claude-3-haiku' : 'gemini-1.5-flash-8b'),
         temperature: settings.temperature || 0.7
       })
       
@@ -77,7 +80,7 @@ export default async function handler(req, res) {
     }
 
     // Отправляем сообщение в чат
-    const chatResult = await geminiService.sendChatMessage(
+    const chatResult = await llmService.sendChatMessage(
       message,
       conversationHistory,
       interviewPlan,
