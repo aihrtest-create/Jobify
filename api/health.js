@@ -25,7 +25,7 @@ export default function handler(req, res) {
   res.status(200).json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    message: 'Jobify.ai API is running'
+    message: 'Jobify.ai API is running on Vercel',
+    environment: process.env.NODE_ENV || 'development'
   })
 }

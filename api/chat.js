@@ -1,5 +1,3 @@
-import geminiService from './services/geminiService.js'
-
 /**
  * Chat endpoint for Vercel Functions
  * @param {Object} req - Request object
@@ -30,8 +28,7 @@ export default async function handler(req, res) {
       context = {},
       conversationHistory = [],
       settings = {},
-      mode = 'interview',
-      interviewPlan = null
+      mode = 'interview'
     } = req.body
 
     // Валидация входных данных
@@ -49,39 +46,24 @@ export default async function handler(req, res) {
       })
     }
 
-    // Получаем настройки LLM с fallback значениями
-    const {
-      model = 'gemini-1.5-flash-8b',
-      temperature = mode === 'planning' ? 0.3 : 0.7,
-      maxTokens = mode === 'planning' ? 2000 : 1000
-    } = settings
-
     console.log(`Chat API request [${mode}]:`, {
       messageLength: message.length,
       hasJob: !!context.jobText,
       hasResume: !!context.resumeText,
-      hasPlan: !!interviewPlan,
       historyLength: conversationHistory.length
     })
 
-    // Отправляем запрос к Gemini
-    const result = await geminiService.sendChatMessage(message, conversationHistory, interviewPlan, {
-      model,
-      temperature,
-      maxTokens
-    })
-
-    // Анализ ответа на предмет завершения интервью
-    if (mode === 'interview' && result.success) {
-      const responseText = result.data.message.toLowerCase()
-      result.data.isCompletionSuggested = responseText.includes('[interview_complete]')
-      
-      if (result.data.isCompletionSuggested) {
-        result.data.message = result.data.message.replace(/\[INTERVIEW_COMPLETE\]/gi, '').trim()
+    // Временная заглушка для тестирования
+    const mockResponse = {
+      success: true,
+      data: {
+        message: `Привет! Я получил ваше сообщение: "${message}". API работает, но Gemini интеграция временно отключена для отладки.`,
+        timestamp: new Date().toISOString(),
+        mode: mode
       }
     }
 
-    res.status(200).json(result)
+    res.status(200).json(mockResponse)
   } catch (error) {
     console.error('Chat API error:', error)
     res.status(500).json({
