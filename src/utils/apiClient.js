@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { getLLMSettings, getGreeting } from './settings'
+import { updateCostStats } from './costTracker'
 
 /**
  * API клиент для работы с бэкендом
@@ -126,6 +127,17 @@ class ApiClient {
         settings: llmSettings
       })
 
+      // Отслеживаем расходы
+      if (response.data.success && response.data.data?.usage) {
+        const { usage, model } = response.data.data
+        const inputTokens = usage.promptTokens || usage.prompt_tokens || 0
+        const outputTokens = usage.completionTokens || usage.completion_tokens || 0
+        
+        if (inputTokens > 0 || outputTokens > 0) {
+          updateCostStats(model || llmSettings.model, inputTokens, outputTokens)
+        }
+      }
+
       return response.data
     } catch (error) {
       console.error('Chat API error:', error)
@@ -212,6 +224,17 @@ class ApiClient {
         }
       })
 
+      // Отслеживаем расходы
+      if (response.data.success && response.data.data?.usage) {
+        const { usage, model } = response.data.data
+        const inputTokens = usage.promptTokens || usage.prompt_tokens || 0
+        const outputTokens = usage.completionTokens || usage.completion_tokens || 0
+        
+        if (inputTokens > 0 || outputTokens > 0) {
+          updateCostStats(model || llmSettings.model, inputTokens, outputTokens)
+        }
+      }
+
       return response.data
     } catch (error) {
       console.error('Feedback API error:', error)
@@ -241,6 +264,17 @@ class ApiClient {
           maxTokens: 1500
         }
       })
+
+      // Отслеживаем расходы
+      if (response.data.success && response.data.data?.usage) {
+        const { usage, model } = response.data.data
+        const inputTokens = usage.promptTokens || usage.prompt_tokens || 0
+        const outputTokens = usage.completionTokens || usage.completion_tokens || 0
+        
+        if (inputTokens > 0 || outputTokens > 0) {
+          updateCostStats(model || llmSettings.model, inputTokens, outputTokens)
+        }
+      }
 
       return response.data
     } catch (error) {

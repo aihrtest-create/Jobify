@@ -10,6 +10,7 @@ import {
 } from '../utils/settings'
 import apiClient from '../utils/apiClient'
 import { clearAllData, showAllData, setTestData } from '../utils/debugUtils'
+import { getCostStats, formatCostStats, resetCostStats } from '../utils/costTracker'
 
 /**
  * Страница настроек приложения (админ-панель)
@@ -22,6 +23,7 @@ const SettingsPage = () => {
   const [saveStatus, setSaveStatus] = useState('')
   const [testStatus, setTestStatus] = useState('')
   const [isTesting, setIsTesting] = useState(false)
+  const [costStats, setCostStats] = useState(getCostStats())
 
   /**
    * Обработчик изменения настроек LLM
@@ -65,6 +67,18 @@ const SettingsPage = () => {
         setSaveStatus('Настройки сброшены ✓')
         setTimeout(() => setSaveStatus(''), 2000)
       }
+    }
+  }
+
+  /**
+   * Сброс статистики расходов
+   */
+  const handleResetCostStats = () => {
+    if (window.confirm('Вы уверены, что хотите сбросить статистику расходов?')) {
+      const newStats = resetCostStats()
+      setCostStats(newStats)
+      setSaveStatus('Статистика расходов сброшена ✓')
+      setTimeout(() => setSaveStatus(''), 2000)
     }
   }
 
@@ -475,6 +489,41 @@ const SettingsPage = () => {
                     </p>
                   </div>
                   
+                  {/* Статистика расходов */}
+                  <div className="pt-4 border-t border-gray-200">
+                    <h4 className="text-md font-medium mb-3">Статистика расходов на ИИ</h4>
+                    {costStats.totalTokens > 0 ? (
+                      <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <div className="text-gray-500">Потрачено:</div>
+                            <div className="font-bold text-green-600">₽{formatCostStats(costStats).totalCostRUB}</div>
+                          </div>
+                          <div>
+                            <div className="text-gray-500">Токенов:</div>
+                            <div className="font-medium">{formatCostStats(costStats).totalTokens}</div>
+                          </div>
+                          <div>
+                            <div className="text-gray-500">Запросов:</div>
+                            <div className="font-medium">{costStats.requestsCount}</div>
+                          </div>
+                          <div>
+                            <div className="text-gray-500">Доллары:</div>
+                            <div className="font-medium">${formatCostStats(costStats).totalCostUSD}</div>
+                          </div>
+                        </div>
+                        <button
+                          onClick={handleResetCostStats}
+                          className="mt-3 bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition-colors"
+                        >
+                          🔄 Сбросить статистику
+                        </button>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500">Расходы пока не зафиксированы</p>
+                    )}
+                  </div>
+
                   <div className="pt-4 border-t border-gray-200">
                     <h4 className="text-md font-medium mb-3">Отладка данных</h4>
                     <div className="flex flex-wrap gap-2">

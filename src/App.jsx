@@ -1,6 +1,7 @@
 import React from 'react'
 import { Routes, Route } from 'react-router-dom'
 import Layout from './components/Layout'
+import CostTracker from './components/CostTracker'
 import HomePage from './pages/HomePage'
 import ResumeInputPage from './pages/ResumeInputPage'
 import DashboardPage from './pages/DashboardPage'
@@ -26,6 +27,7 @@ const App = () => {
         <Route path="/history" element={<HistoryPage />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Routes>
+      <CostTracker />
     </Layout>
   )
 }
