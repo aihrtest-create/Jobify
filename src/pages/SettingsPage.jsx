@@ -236,6 +236,7 @@ const SettingsPage = () => {
                       <option value="anthropic/claude-3-opus">Claude 3 Opus (мощная, для сложных интервью)</option>
                       
                       {/* GPT модели */}
+                      <option value="openai/gpt-4o">GPT-4o (новейшая, оптимальная)</option>
                       <option value="openai/gpt-4">GPT-4 (премиум качество)</option>
                       <option value="openai/gpt-4-turbo">GPT-4 Turbo (быстрая GPT-4)</option>
                       <option value="openai/gpt-3.5-turbo">GPT-3.5 Turbo (быстрая, экономичная)</option>
@@ -394,8 +395,8 @@ const SettingsPage = () => {
                   </p>
                   <ul className="text-xs text-blue-700 mt-2 space-y-1">
                     <li>• <strong>Claude 3 Haiku</strong> - быстрая и экономичная для базовых интервью</li>
+                    <li>• <strong>GPT-4o</strong> - новейшая модель, отличное соотношение цена/качество</li>
                     <li>• <strong>Claude 3 Sonnet</strong> - лучший баланс качества и скорости</li>
-                    <li>• <strong>GPT-4</strong> - премиум качество для сложных технических интервью</li>
                     <li>• <strong>Llama 3 8B</strong> - бесплатная альтернатива</li>
                   </ul>
                   <p className="text-xs text-blue-600 mt-2">

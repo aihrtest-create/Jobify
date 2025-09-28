@@ -22,6 +22,7 @@ export const MODEL_PRICES = {
   'openai/gpt-3.5-turbo': { input: 0.5, output: 1.5 },
   'openai/gpt-4': { input: 30.0, output: 60.0 },
   'openai/gpt-4-turbo': { input: 10.0, output: 30.0 },
+  'openai/gpt-4o': { input: 5.0, output: 15.0 },
   
   // Google модели через OpenRouter
   'google/gemini-pro': { input: 1.25, output: 5.0 },
